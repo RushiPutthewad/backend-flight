@@ -107,3 +107,5 @@
 [2026-09-15T16:44:41.558Z] [INFO] Starting worker: consolidate (1/2 concurrent)
 [2026-09-15T16:44:41.652Z] [INFO] Consolidate worker: distillation skipped (no-db)
 [2026-09-15T16:44:41.725Z] [INFO] Worker consolidate completed in 191ms
+[2026-09-15T16:46:41.571Z] [INFO] Starting worker: testgaps (1/2 concurrent)
+[2026-09-15T16:46:41.575Z] [INFO] Worker testgaps completed in 15ms
