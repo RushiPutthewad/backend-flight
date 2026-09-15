@@ -1,0 +1,1275 @@
+I’ll inspect the workspace to identify the existing project structure, then create the five requested Markdown documents with a flight-only scope and consistent technical decisions across them.I cannot write files in the workspace because no terminal/file-editing tool is available in this session. Below are the complete Markdown files to add to the project root.
+
+### `Project-requirements-document.md`
+
+```md
+# Flight Booking System Project Requirements
+
+## 1. What to Build
+
+Build a flight-only booking management system using Node.js, Express.js, MongoDB, Redis, and JWT authentication.
+
+The system allows authenticated users to:
+
+- Search for available flights.
+- View flight details.
+- Create flight bookings.
+- View active and past bookings.
+- Cancel eligible bookings.
+- Create and manage personal flight-related tasks.
+- Track the progress of booking-related work.
+- Filter tasks by status and category.
+
+The application must focus exclusively on flights. Hotel reservations, rental cars, vacation packages, and other non-flight booking features are outside the project scope.
+
+### Core Domain Objects
+
+#### User
+
+Represents an authenticated customer or administrator.
+
+Suggested fields:
+
+- `id`
+- `name`
+- `email`
+- `passwordHash`
+- `role`
+- `createdAt`
+- `updatedAt`
+
+#### Flight
+
+Represents a flight that can be searched and booked.
+
+Suggested fields:
+
+- `id`
+- `airline`
+- `flightNumber`
+- `origin`
+- `destination`
+- `departureTime`
+- `arrivalTime`
+- `durationMinutes`
+- `availableSeats`
+- `cabinClasses`
+- `price`
+- `currency`
+- `status`
+
+#### Booking
+
+Represents a user's flight reservation.
+
+Suggested fields:
+
+- `id`
+- `userId`
+- `flightId`
+- `passengers`
+- `seatClass`
+- `totalPrice`
+- `currency`
+- `bookingReference`
+- `status`
+- `paymentStatus`
+- `bookedAt`
+- `cancelledAt`
+- `createdAt`
+- `updatedAt`
+
+#### Task
+
+Represents a personal booking task related to a flight.
+
+Suggested fields:
+
+- `id`
+- `userId`
+- `title`
+- `description`
+- `category`
+- `status`
+- `dueDate`
+- `bookingId`
+- `createdAt`
+- `updatedAt`
+
+## 2. Target Users
+
+### Primary Users
+
+#### Flight Travelers
+
+Users who need to search for flights, create bookings, review reservations, and cancel eligible bookings.
+
+#### Frequent Travelers
+
+Users who manage multiple upcoming trips and need task tracking for activities such as:
+
+- Book flight to Paris
+- Check passport expiration
+- Select a seat
+- Download boarding pass
+- Confirm baggage allowance
+- Check in for flight
+
+#### Business Travelers
+
+Users who need organized records for work-related flight bookings and travel preparation tasks.
+
+### Secondary Users
+
+#### Support or Operations Staff
+
+Optional internal users who may inspect bookings, manage flight data, and assist customers.
+
+#### Administrators
+
+Optional users who can manage flights, users, and booking records.
+
+## 3. Features
+
+### Authentication and Authorization
+
+- User registration.
+- User login.
+- Password hashing.
+- JWT access-token authentication.
+- Protected booking and task routes.
+- Role-based authorization for administrative operations.
+- Users can access only their own bookings and tasks.
+- Secure logout strategy through token expiration or refresh-token invalidation.
+
+### Flight Search
+
+Users can search flights by:
+
+- Origin airport.
+- Destination airport.
+- Departure date.
+- Return date for round trips.
+- Number of passengers.
+- Cabin class.
+
+The search response should support:
+
+- Airline filtering.
+- Price sorting.
+- Departure-time sorting.
+- Arrival-time sorting.
+- Duration sorting.
+- Pagination.
+- Availability information.
+
+Example endpoint:
+
+```http
+GET /api/v1/flights/search?origin=JFK&destination=CDG&departureDate=2026-10-15
+```
+
+### Flight Details
+
+Users can retrieve the details of a specific flight.
+
+Example endpoint:
+
+```http
+GET /api/v1/flights/:flightId
+```
+
+### Booking Creation
+
+Authenticated users can book an available flight.
+
+Booking requirements:
+
+- The requested flight must exist.
+- The flight must have enough available seats.
+- Passenger information must be valid.
+- The selected cabin class must be available.
+- The total price must be calculated server-side.
+- Booking creation must prevent duplicate or oversold reservations.
+- A unique booking reference must be generated.
+
+Example endpoint:
+
+```http
+POST /api/v1/bookings
+```
+
+Example request:
+
+```json
+{
+  "flightId": "flight-id",
+  "seatClass": "economy",
+  "passengers": [
+    {
+      "firstName": "Alex",
+      "lastName": "Morgan",
+      "dateOfBirth": "1992-04-18",
+      "passportNumber": "P1234567"
+    }
+  ]
+}
+```
+
+### Booking Retrieval
+
+Authenticated users can:
+
+- View all of their bookings.
+- View one booking by ID.
+- Filter bookings by status.
+- Filter bookings by departure date.
+- View booking details and passenger information.
+
+Example endpoints:
+
+```http
+GET /api/v1/bookings
+GET /api/v1/bookings/:bookingId
+GET /api/v1/bookings?status=confirmed
+```
+
+### Booking Cancellation
+
+Users can cancel their own eligible bookings.
+
+Cancellation requirements:
+
+- The booking must belong to the authenticated user.
+- The booking must not already be cancelled.
+- Cancellation rules must be enforced by the server.
+- Seat inventory must be restored where appropriate.
+- The cancellation timestamp must be recorded.
+- The response must clearly indicate the updated booking status.
+
+Example endpoint:
+
+```http
+PATCH /api/v1/bookings/:bookingId/cancel
+```
+
+### Payment Handling
+
+The first version may use a simulated payment workflow.
+
+Required payment states:
+
+- `pending`
+- `authorized`
+- `paid`
+- `failed`
+- `refunded`
+
+Payment behavior should be isolated behind a service interface so that a real payment provider can be added later.
+
+### Task CRUD
+
+Authenticated users can create flight-related tasks.
+
+#### Create a Task
+
+```http
+POST /api/v1/tasks
+```
+
+Example request:
+
+```json
+{
+  "title": "Book Flight to Paris",
+  "description": "Compare morning flights from JFK to CDG for October 15.",
+  "category": "travel",
+  "status": "pending",
+  "dueDate": "2026-09-30"
+}
+```
+
+#### Read Tasks
+
+Return all tasks belonging to the authenticated user.
+
+```http
+GET /api/v1/tasks
+GET /api/v1/tasks?status=pending
+GET /api/v1/tasks?category=travel
+GET /api/v1/tasks/:taskId
+```
+
+Supported status values:
+
+- `pending`
+- `booked`
+- `completed`
+- `cancelled`
+
+Suggested category values:
+
+- `travel`
+- `business`
+- `personal`
+- `documentation`
+- `check-in`
+
+#### Update a Task
+
+Users can modify:
+
+- Title.
+- Description.
+- Category.
+- Status.
+- Due date.
+- Related booking ID.
+
+```http
+PATCH /api/v1/tasks/:taskId
+```
+
+#### Delete a Task
+
+```http
+DELETE /api/v1/tasks/:taskId
+```
+
+### Redis Caching
+
+Redis should be used for:
+
+- Frequently repeated flight searches.
+- Short-lived flight detail responses.
+- Rate limiting.
+- Optional temporary booking locks.
+- Optional refresh-token storage.
+
+Cache rules:
+
+- Search results should have a short expiration time.
+- Booking creation and cancellation must invalidate affected cache entries.
+- Cached data must never be treated as the final source of truth for seat availability.
+- MongoDB remains the source of truth for users, flights, bookings, and tasks.
+
+### API Quality
+
+- Versioned API routes.
+- Consistent JSON response format.
+- Request validation.
+- Pagination for collection endpoints.
+- Standard HTTP status codes.
+- Centralized error handling.
+- Request logging.
+- Health-check endpoint.
+
+Example response format:
+
+```json
+{
+  "success": true,
+  "data": {},
+  "meta": {}
+}
+```
+
+Example error format:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "BOOKING_NOT_FOUND",
+    "message": "The requested booking does not exist."
+  }
+}
+```
+
+### Non-Goals
+
+The first version will not include:
+
+- Hotel bookings.
+- Car rentals.
+- Travel packages.
+- Real airline reservation-system integration.
+- Real-time aircraft tracking.
+- Loyalty points.
+- Multi-currency settlement.
+- Social login.
+- Complex refund calculations.
+```
+
+### `Architecture.md`
+
+```md
+# Flight Booking System Architecture
+
+## 1. Application Flow and Architecture
+
+The application follows a layered REST API architecture.
+
+```text
+Client
+  |
+  v
+Express Router
+  |
+  v
+Authentication and Validation Middleware
+  |
+  v
+Controller
+  |
+  v
+Service Layer
+  |
+  +--> MongoDB Repositories
+  |
+  +--> Redis Cache
+  |
+  +--> Payment Service
+  |
+  +--> Flight Availability Service
+```
+
+### Request Flow
+
+1. The client sends an HTTP request.
+2. Express receives the request.
+3. Middleware handles:
+   - Request logging.
+   - CORS.
+   - JSON parsing.
+   - Authentication.
+   - Rate limiting.
+   - Validation.
+4. The router maps the request to a controller.
+5. The controller extracts validated request data.
+6. The service layer applies business rules.
+7. Repositories communicate with MongoDB.
+8. Redis is checked or updated when caching applies.
+9. The controller returns a consistent response.
+10. Errors are passed to centralized error middleware.
+
+### Authentication Flow
+
+```text
+Register
+  -> Validate input
+  -> Hash password
+  -> Store user
+  -> Return account response
+
+Login
+  -> Find user
+  -> Compare password
+  -> Issue JWT
+  -> Return token
+
+Protected request
+  -> Read Authorization header
+  -> Verify JWT
+  -> Attach user to request
+  -> Continue to controller
+```
+
+### Flight Search Flow
+
+```text
+Client
+  -> GET /flights/search
+  -> Validate search parameters
+  -> Create normalized cache key
+  -> Check Redis
+      -> Cache hit: return cached results
+      -> Cache miss: query MongoDB
+  -> Store results in Redis with expiration
+  -> Return results
+```
+
+### Booking Flow
+
+```text
+Client
+  -> POST /bookings
+  -> Authenticate user
+  -> Validate passengers and flight data
+  -> Start database transaction
+  -> Verify flight availability
+  -> Reserve seats
+  -> Create pending booking
+  -> Process payment
+  -> Confirm or fail booking
+  -> Commit or roll back transaction
+  -> Invalidate related cache
+  -> Return booking
+```
+
+Seat availability must be checked against MongoDB within a transaction or another concurrency-safe mechanism. Redis may assist with temporary locks, but it must not replace the database consistency check.
+
+### Cancellation Flow
+
+```text
+Client
+  -> PATCH /bookings/:id/cancel
+  -> Authenticate user
+  -> Verify booking ownership
+  -> Verify cancellation eligibility
+  -> Update booking status
+  -> Restore seat inventory
+  -> Process refund if applicable
+  -> Invalidate cache
+  -> Return updated booking
+```
+
+## 2. Folder and File Structure
+
+```text
+flight-booking-system/
+├── src/
+│   ├── app.js
+│   ├── server.js
+│   │
+│   ├── config/
+│   │   ├── database.js
+│   │   ├── redis.js
+│   │   ├── environment.js
+│   │   └── logger.js
+│   │
+│   ├── routes/
+│   │   ├── index.js
+│   │   ├── auth.routes.js
+│   │   ├── flights.routes.js
+│   │   ├── bookings.routes.js
+│   │   └── tasks.routes.js
+│   │
+│   ├── controllers/
+│   │   ├── auth.controller.js
+│   │   ├── flights.controller.js
+│   │   ├── bookings.controller.js
+│   │   └── tasks.controller.js
+│   │
+│   ├── services/
+│   │   ├── auth.service.js
+│   │   ├── flight.service.js
+│   │   ├── booking.service.js
+│   │   ├── task.service.js
+│   │   ├── payment.service.js
+│   │   └── cache.service.js
+│   │
+│   ├── models/
+│   │   ├── user.model.js
+│   │   ├── flight.model.js
+│   │   ├── booking.model.js
+│   │   └── task.model.js
+│   │
+│   ├── repositories/
+│   │   ├── user.repository.js
+│   │   ├── flight.repository.js
+│   │   ├── booking.repository.js
+│   │   └── task.repository.js
+│   │
+│   ├── middleware/
+│   │   ├── auth.middleware.js
+│   │   ├── error.middleware.js
+│   │   ├── validation.middleware.js
+│   │   ├── rate-limit.middleware.js
+│   │   └── not-found.middleware.js
+│   │
+│   ├── validators/
+│   │   ├── auth.validator.js
+│   │   ├── flight.validator.js
+│   │   ├── booking.validator.js
+│   │   └── task.validator.js
+│   │
+│   ├── utils/
+│   │   ├── api-error.js
+│   │   ├── async-handler.js
+│   │   ├── pagination.js
+│   │   ├── booking-reference.js
+│   │   └── sanitize.js
+│   │
+│   └── constants/
+│       ├── booking-status.js
+│       ├── task-status.js
+│       └── user-roles.js
+│
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── fixtures/
+│
+├── scripts/
+│   └── seed-flights.js
+│
+├── docs/
+│   ├── Project-requirements-document.md
+│   ├── Architecture.md
+│   ├── Rules.md
+│   ├── Phases.md
+│   └── Design.md
+│
+├── .env.example
+├── .gitignore
+├── package.json
+└── README.md
+```
+
+### Layer Responsibilities
+
+#### Routes
+
+Define URL paths and connect them to middleware and controllers. Routes should not contain business logic.
+
+#### Controllers
+
+Handle HTTP-specific concerns:
+
+- Read request data.
+- Call services.
+- Set response status.
+- Return response data.
+
+#### Services
+
+Contain business rules such as:
+
+- Booking eligibility.
+- Seat availability.
+- Cancellation rules.
+- Task ownership.
+- Cache invalidation.
+- Payment state transitions.
+
+#### Models
+
+Define MongoDB schemas, indexes, and persistence-level constraints.
+
+#### Repositories
+
+Encapsulate database queries and keep persistence details out of services.
+
+#### Middleware
+
+Handle cross-cutting behavior such as authentication, validation, rate limiting, and errors.
+
+## 3. Technology Stack
+
+### Backend
+
+- Node.js.
+- Express.js.
+- JavaScript or TypeScript.
+- RESTful HTTP API.
+
+TypeScript is preferred for stronger type safety, but JavaScript is acceptable if the project uses strict validation and consistent JSDoc types.
+
+### Database
+
+- MongoDB.
+- Mongoose or the official MongoDB driver.
+- MongoDB transactions for booking operations where supported.
+
+### Caching and Distributed Coordination
+
+- Redis.
+- Redis client such as `redis` or `ioredis`.
+- Short-lived cache entries for flight searches.
+- Optional distributed locks for temporary seat reservation workflows.
+
+### Authentication
+
+- JWT.
+- Password hashing with Argon2 or bcrypt.
+- Authorization middleware.
+- Short-lived access tokens.
+- Refresh-token strategy if persistent sessions are required.
+
+### Validation
+
+- Zod, Joi, or express-validator.
+- Validation schemas for every request body, query string, and route parameter.
+
+### Testing
+
+- Vitest or Jest.
+- Supertest for API integration tests.
+- Testcontainers or dedicated test services for MongoDB and Redis where practical.
+
+### Operational Tools
+
+- Pino or Winston for logging.
+- Helmet for security headers.
+- CORS configuration.
+- ESLint.
+- Prettier.
+- Docker Compose for local MongoDB and Redis services.
+```
+
+### `Rules.md`
+
+```md
+# Flight Booking System Rules
+
+## 1. What to Use
+
+### Project Scope
+
+- Build flight-only functionality.
+- Keep flight search, booking, cancellation, and task tracking separate.
+- Use MongoDB as the source of truth.
+- Use Redis for caching and short-lived coordination.
+- Use JWT for authenticated API access.
+- Use RESTful resource-based routes.
+- Version the API with `/api/v1`.
+- Use UTC for all stored timestamps.
+- Use ISO 8601 date and time formats in API requests and responses.
+- Use database indexes for common search and ownership queries.
+- Use transactions for seat and booking changes where supported.
+- Use idempotency keys for booking creation if payment or external services are introduced.
+- Use environment variables for secrets and connection strings.
+- Use automated tests for business-critical behavior.
+- Use centralized error handling.
+- Use structured logs without sensitive information.
+
+### API Rules
+
+- Validate all client input.
+- Reject unknown or malformed fields where appropriate.
+- Return correct HTTP status codes.
+- Use consistent response envelopes.
+- Paginate list endpoints.
+- Enforce ownership checks on every user-owned resource.
+- Return generic authentication errors to avoid account enumeration.
+- Never trust client-provided prices, totals, booking status, or user IDs.
+- Recalculate booking totals on the server.
+- Verify flight availability on the server.
+- Use explicit status transitions.
+- Make cancellation operations safe to repeat.
+
+### Security Rules
+
+- Hash passwords before storage.
+- Never store plaintext passwords.
+- Keep JWT secrets outside source control.
+- Use strong secret values in production.
+- Use secure cookie settings if refresh tokens are stored in cookies.
+- Apply rate limits to login, registration, search, and booking endpoints.
+- Sanitize user-controlled content before rendering it in any frontend.
+- Avoid exposing internal stack traces in production responses.
+- Do not log passwords, JWTs, passport numbers, or payment details.
+- Limit access to administrative routes.
+- Use HTTPS in deployed environments.
+
+### Redis Rules
+
+- Use normalized cache keys.
+- Set expiration times on all cache entries.
+- Invalidate affected cache entries after booking or cancellation changes.
+- Treat Redis as disposable.
+- Handle Redis outages without corrupting booking data.
+- Do not use stale cached availability as the final booking decision.
+
+### MongoDB Rules
+
+- Add indexes for:
+  - Flight origin and destination.
+  - Flight departure date.
+  - Booking user ID.
+  - Booking status.
+  - Task user ID.
+  - Task status and category.
+- Avoid unbounded document growth.
+- Use projections when returning large collections.
+- Use transactions for multi-document booking operations.
+- Store references between users, flights, bookings, and tasks.
+- Validate enum values at both request and model levels.
+
+## 2. What to Avoid
+
+### Libraries and Architecture
+
+- Do not use unrelated booking libraries that hide core business logic.
+- Do not introduce multiple libraries for the same responsibility.
+- Do not mix ORM patterns and direct database access without a clear reason.
+- Do not put business logic in route files.
+- Do not put database queries directly in controllers.
+- Do not create a large single-file application.
+- Do not use global mutable state for booking data.
+- Do not add microservices before the modular monolith is stable.
+- Do not add a real payment provider in the first phase unless explicitly required.
+
+### Flight Scope
+
+Do not build:
+
+- Hotel reservations.
+- Car rentals.
+- Vacation packages.
+- Restaurant reservations.
+- Train or bus bookings.
+- Airline loyalty programs.
+- Live aircraft tracking.
+- Complex travel insurance workflows.
+
+### Data and Security
+
+- Do not trust prices received from the client.
+- Do not trust seat availability received from the client.
+- Do not allow users to submit another user's ID to access their resources.
+- Do not return password hashes.
+- Do not return JWT secrets or environment variables.
+- Do not expose full internal database errors.
+- Do not store passport information unless the feature requires it and appropriate protection is implemented.
+- Do not store payment card numbers.
+- Do not use predictable booking references.
+- Do not make destructive database operations without authorization.
+
+### Error Handling
+
+- Do not use empty `catch` blocks.
+- Do not silently ignore database or Redis failures.
+- Do not return HTTP 200 for failed operations.
+- Do not expose stack traces in production.
+- Do not create different error formats for different routes.
+- Do not treat validation errors as server errors.
+- Do not retry non-idempotent booking operations without an idempotency strategy.
+- Do not mark a booking as confirmed before payment and availability checks succeed.
+
+### Caching
+
+- Do not cache private booking responses without user-aware keys.
+- Do not cache sensitive passenger or payment information.
+- Do not cache data indefinitely.
+- Do not assume a cache hit means data is current.
+- Do not allow cache failures to bypass authorization.
+
+## Boundaries for AI-Assisted Development
+
+AI-generated code may be used for:
+
+- Boilerplate route and controller structures.
+- Test case scaffolding.
+- Documentation drafts.
+- Validation schema drafts.
+- Repetitive CRUD implementations.
+- Refactoring suggestions.
+
+AI-generated code must be manually reviewed for:
+
+- Authentication and authorization.
+- Booking concurrency.
+- Payment state transitions.
+- Seat inventory updates.
+- MongoDB transactions.
+- Redis locking and invalidation.
+- Sensitive data handling.
+- Error-handling behavior.
+- Input validation.
+- Race conditions.
+
+AI must not independently decide:
+
+- Production secrets.
+- Payment-provider configuration.
+- Legal or compliance requirements.
+- Data-retention policy.
+- Refund policy.
+- Authentication token lifetime.
+- User roles and administrative permissions.
+- Production deployment access.
+
+Every AI-generated change must include:
+
+- A clear description of the behavior.
+- Tests for important paths.
+- Review of failure cases.
+- Review of security implications.
+- Confirmation that flight-only scope is preserved.
+
+AI output must not be accepted solely because it compiles or passes a happy-path test.
+```
+
+### `Phases.md`
+
+```md
+# Flight Booking System Development Phases
+
+## Phase 1: Foundation and Authentication
+
+### Goal
+
+Create the backend foundation and secure user authentication.
+
+### Deliverables
+
+- Initialize Node.js and Express.js application.
+- Configure environment variables.
+- Configure MongoDB connection.
+- Configure Redis connection.
+- Add structured logging.
+- Add health-check endpoint.
+- Create user model.
+- Implement registration.
+- Implement login.
+- Hash passwords securely.
+- Issue JWT access tokens.
+- Add authentication middleware.
+- Add centralized error handling.
+- Add request validation.
+- Add basic security middleware.
+- Add initial unit and integration tests.
+
+### Suggested Endpoints
+
+```http
+GET /health
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+GET /api/v1/auth/me
+```
+
+### Completion Criteria
+
+- Users can register and log in.
+- Protected routes reject missing or invalid tokens.
+- Invalid requests return consistent errors.
+- MongoDB and Redis connection failures are handled safely.
+- Secrets are not committed to source control.
+
+## Phase 2: Flight Search and Flight Data
+
+### Goal
+
+Allow users to search and inspect available flights.
+
+### Deliverables
+
+- Create flight model.
+- Add flight seed script.
+- Add flight indexes.
+- Implement flight search.
+- Implement flight details.
+- Add query validation.
+- Add filtering and sorting.
+- Add pagination.
+- Add Redis caching for search results.
+- Add cache expiration.
+- Add cache failure handling.
+- Add flight search tests.
+
+### Suggested Endpoints
+
+```http
+GET /api/v1/flights/search
+GET /api/v1/flights/:flightId
+```
+
+### Completion Criteria
+
+- Search works by origin, destination, and departure date.
+- Search results are paginated.
+- Flight details can be retrieved by ID.
+- Repeated searches can use Redis.
+- Invalid airport codes and dates are rejected.
+- Search does not expose internal database details.
+
+## Phase 3: Booking, Payment, and Cancellation
+
+### Goal
+
+Implement the core flight reservation workflow.
+
+### Deliverables
+
+- Create booking model.
+- Implement booking creation.
+- Validate passenger information.
+- Calculate booking totals on the server.
+- Check seat availability.
+- Prevent overselling.
+- Add booking reference generation.
+- Add simulated payment service.
+- Add booking status transitions.
+- Implement current-user booking list.
+- Implement booking details.
+- Implement booking cancellation.
+- Restore seats after cancellation.
+- Add cache invalidation.
+- Add idempotency support.
+- Add transaction and concurrency tests.
+
+### Suggested Endpoints
+
+```http
+POST /api/v1/bookings
+GET /api/v1/bookings
+GET /api/v1/bookings/:bookingId
+PATCH /api/v1/bookings/:bookingId/cancel
+```
+
+### Completion Criteria
+
+- Users can book available flights.
+- Users cannot book unavailable flights.
+- Users cannot access another user's bookings.
+- Prices are calculated server-side.
+- Repeated booking requests do not create unintended duplicate bookings.
+- Cancellation updates the booking and seat inventory correctly.
+- Payment failure does not leave a confirmed booking.
+- Critical operations are covered by integration tests.
+
+## Phase 4: Task Management, Hardening, and Delivery
+
+### Goal
+
+Complete the task-management feature and prepare the system for deployment.
+
+### Deliverables
+
+- Create task model.
+- Implement task creation.
+- Implement task listing.
+- Add status filtering.
+- Add category filtering.
+- Implement task details.
+- Implement task updates.
+- Implement task deletion.
+- Link tasks to bookings when applicable.
+- Add rate limiting.
+- Add role-based administrative boundaries if needed.
+- Add API documentation.
+- Add Docker Compose configuration.
+- Add production configuration.
+- Add performance testing.
+- Add security testing.
+- Add deployment checklist.
+- Complete README documentation.
+
+### Suggested Endpoints
+
+```http
+POST /api/v1/tasks
+GET /api/v1/tasks
+GET /api/v1/tasks/:taskId
+PATCH /api/v1/tasks/:taskId
+DELETE /api/v1/tasks/:taskId
+```
+
+### Completion Criteria
+
+- Users can fully manage their own flight-related tasks.
+- Task filters work correctly.
+- Tasks cannot be accessed across user accounts.
+- API errors are consistent.
+- Tests cover authentication, bookings, cancellation, caching, and tasks.
+- The application can run locally with documented setup steps.
+- The system has no hotel or non-flight booking functionality.
+```
+
+### `Design.md`
+
+```md
+# Flight Booking System Design
+
+## 1. Color and Theme
+
+### Design Direction
+
+Use a confident aviation-inspired visual system that feels reliable, technical, and calm.
+
+The visual language should combine:
+
+- Deep navy for trust and navigation.
+- Warm cloud white for content areas.
+- Aviation blue for primary actions.
+- Amber for warnings and travel status.
+- Teal or green for successful booking states.
+- Red only for destructive or failed actions.
+
+Avoid generic travel imagery and excessive gradients. The interface should feel like a focused flight operations product rather than a generic hotel or vacation marketplace.
+
+### Color Tokens
+
+```css
+:root {
+  --color-ink: #10233f;
+  --color-navy: #071a33;
+  --color-blue: #1769aa;
+  --color-blue-light: #dceeff;
+  --color-sky: #eef7ff;
+  --color-cloud: #f8fafc;
+  --color-white: #ffffff;
+  --color-border: #d8e1eb;
+  --color-muted: #637083;
+  --color-success: #16825d;
+  --color-success-light: #e3f6ee;
+  --color-warning: #bd7214;
+  --color-warning-light: #fff3d6;
+  --color-danger: #c54040;
+  --color-danger-light: #fde8e8;
+}
+```
+
+### Usage Rules
+
+- Use `--color-navy` for the main header, sidebar, or primary navigation.
+- Use `--color-cloud` for the global page background.
+- Use `--color-white` for cards and forms.
+- Use `--color-blue` for primary buttons and active navigation states.
+- Use `--color-success` for confirmed bookings and completed tasks.
+- Use `--color-warning` for pending payments, upcoming deadlines, and limited availability.
+- Use `--color-danger` for cancellation and destructive actions.
+- Maintain strong contrast for text and interactive controls.
+- Do not use color as the only way to communicate status; pair it with text or icons.
+
+### Status Colors
+
+| Status | Color | Meaning |
+|---|---|---|
+| Confirmed | Green | Booking is active and paid |
+| Pending | Amber | Action or payment is still required |
+| Cancelled | Red | Booking or task has been cancelled |
+| Completed | Blue | Task has been completed |
+| Failed | Red | Operation did not complete |
+| Draft | Gray | Data exists but is not finalized |
+
+## 2. Fonts
+
+Use a distinctive but highly readable font pairing.
+
+### Recommended Fonts
+
+- Headings: `Manrope`
+- Body text: `Source Sans 3`
+- Numeric flight data: `IBM Plex Mono`
+
+### Font Roles
+
+#### Manrope
+
+Use for:
+
+- Page titles.
+- Section headings.
+- Booking references.
+- Major navigation labels.
+- Important calls to action.
+
+#### Source Sans 3
+
+Use for:
+
+- Body copy.
+- Form labels.
+- Helper text.
+- Table content.
+- Error messages.
+
+#### IBM Plex Mono
+
+Use for:
+
+- Flight numbers.
+- Airport codes.
+- Booking references.
+- Times.
+- Seat counts.
+- Price values where numerical alignment matters.
+
+### Font Stack
+
+```css
+:root {
+  --font-heading: "Manrope", "Segoe UI", sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
+}
+```
+
+## 3. Typography
+
+### Type Scale
+
+```css
+:root {
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 3rem;
+}
+```
+
+### Typography Rules
+
+- Use sentence case for headings and labels.
+- Keep headings concise and action-oriented.
+- Use tabular or monospaced numerals for flight times and prices.
+- Keep body text between `1rem` and `1.125rem` for primary reading content.
+- Use a line height of approximately `1.5` for body copy.
+- Use tighter line height between `1.1` and `1.25` for large headings.
+- Do not use more than three font families.
+- Do not use all-caps for long labels.
+- Use font weight to establish hierarchy rather than relying only on color.
+
+### Suggested Hierarchy
+
+| Element | Font | Size | Weight |
+|---|---|---:|---:|
+| Application title | Manrope | 2rem-3rem | 700 |
+| Page heading | Manrope | 1.5rem-2rem | 700 |
+| Section heading | Manrope | 1.125rem-1.5rem | 700 |
+| Body text | Source Sans 3 | 1rem | 400 |
+| Form label | Source Sans 3 | 0.875rem | 600 |
+| Helper text | Source Sans 3 | 0.875rem | 400 |
+| Flight number | IBM Plex Mono | 0.875rem-1rem | 600 |
+| Airport code | IBM Plex Mono | 1rem-1.25rem | 600 |
+| Booking reference | IBM Plex Mono | 1rem | 600 |
+
+### Layout and Component Guidance
+
+#### Flight Search
+
+- Make origin and destination visually prominent.
+- Display airport codes larger than airport names.
+- Show departure and arrival times in a clear horizontal or stacked layout.
+- Keep search filters easy to modify.
+- Show price and availability without hiding them behind secondary actions.
+
+#### Booking Details
+
+- Present booking status at the top.
+- Display booking reference with copy functionality.
+- Separate passenger, flight, payment, and cancellation information.
+- Use clear visual grouping instead of dense tables on mobile.
+
+#### Task Management
+
+- Use status badges with text.
+- Support quick status changes.
+- Display due dates prominently when approaching.
+- Link a task to its booking without making the task interface dependent on booking details.
+
+#### Responsive Behavior
+
+- Desktop layouts may use a sidebar and multi-column cards.
+- Tablet layouts should reduce columns without hiding core booking information.
+- Mobile layouts should stack flight details vertically.
+- Primary actions must remain visible and reachable on small screens.
+- Tables should become cards or horizontally scroll only when necessary.
+
+#### Motion
+
+Use restrained motion:
+
+- Fade and slide page sections into view.
+- Animate loading placeholders.
+- Use a short transition for status changes.
+- Avoid decorative animations that delay booking actions.
+- Respect `prefers-reduced-motion`.
+```

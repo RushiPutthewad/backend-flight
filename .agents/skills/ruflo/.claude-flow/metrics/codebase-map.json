@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-09-15T16:38:41.654Z",
+  "projectRoot": "D:\\Backup balaji Puttewad\\C Drive\\Downloads\\apiTester\\dev_Backend\\.agents\\skills\\ruflo",
+  "structure": {
+    "hasPackageJson": false,
+    "hasTsConfig": false,
+    "hasClaudeConfig": true,
+    "hasClaudeFlow": true
+  },
+  "scannedAt": 1789490321655
+}
