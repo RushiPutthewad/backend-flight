@@ -86,8 +86,9 @@ class TaskService {
   }
 
   async getTaskStats(userId) {
+    const mongoose = require('mongoose');
     const stats = await Task.aggregate([
-      { $match: { user: userId } },
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
       {
         $group: {
           _id: '$status',

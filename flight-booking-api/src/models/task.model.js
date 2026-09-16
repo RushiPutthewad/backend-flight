@@ -76,7 +76,7 @@ taskSchema.virtual('isOverdue').get(function() {
 });
 
 // Auto-set completedAt when status changes to completed
-taskSchema.pre('save', function(next) {
+taskSchema.pre('save', function() {
   if (this.isModified('status')) {
     if (this.status === TASK_STATUS.COMPLETED && !this.completedAt) {
       this.completedAt = new Date();
@@ -84,7 +84,6 @@ taskSchema.pre('save', function(next) {
       this.completedAt = undefined;
     }
   }
-  next();
 });
 
 const Task = mongoose.model('Task', taskSchema);
