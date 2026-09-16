@@ -68,7 +68,7 @@ const bookingSchema = new mongoose.Schema({
 });
 
 // Generate booking reference before saving (format: BK-XXXXXX)
-bookingSchema.pre('save', async function(next) {
+bookingSchema.pre('save', function() {
   if (!this.bookingReference) {
     // Generate 6-character alphanumeric reference
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -78,7 +78,6 @@ bookingSchema.pre('save', async function(next) {
     }
     this.bookingReference = `BK-${reference}`;
   }
-  next();
 });
 
 // Validate status transition

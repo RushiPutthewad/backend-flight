@@ -109,3 +109,5 @@
 [2026-09-15T16:44:41.725Z] [INFO] Worker consolidate completed in 191ms
 [2026-09-15T16:46:41.571Z] [INFO] Starting worker: testgaps (1/2 concurrent)
 [2026-09-15T16:46:41.575Z] [INFO] Worker testgaps completed in 15ms
+[2026-09-15T16:50:41.970Z] [INFO] Starting worker: audit (1/2 concurrent)
+[2026-09-15T16:50:41.972Z] [INFO] Worker audit completed in 14ms
