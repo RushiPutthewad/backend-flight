@@ -123,6 +123,46 @@ class AuthService {
     }
     return user;
   }
+
+  async deleteAccount(userId, password) {
+    const User = require('../models/user.model');
+    const Task = require('../models/task.model');
+    const Booking = require('../models/booking.model');
+    const { redisClient } = require('../config/redis');
+    const logger = require('../config/logger');
+
+    // 1. Verify password (security confirmation)
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      throw ApiError.unauthorized('Invalid password. Account deletion cancelled.');
+    }
+
+    // 2. Delete all user data
+    await User.deleteOne({ _id: userId });
+    await Task.deleteMany({ user: userId });
+    await Booking.deleteMany({ user: userId });
+
+    // 3. Clear Redis cache entries for this user
+    try {
+      if (redisClient.isOpen) {
+        const keys = await redisClient.keys(`*${userId}*`);
+        if (keys.length > 0) {
+          await redisClient.del(keys);
+        }
+      }
+    } catch (error) {
+      // Log but don't fail deletion if Redis cleanup fails
+      logger.warn({ error: error.message }, 'Redis cleanup failed during account deletion');
+    }
+
+    // 4. Log deletion (no personal data in log)
+    logger.info({ userId, timestamp: new Date() }, 'User account deleted');
+  }
 }
 
 module.exports = new AuthService();

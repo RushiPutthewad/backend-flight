@@ -17,8 +17,13 @@ const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required')
 });
 
+const deleteAccountSchema = z.object({
+  password: z.string().min(1, 'Password is required for account deletion confirmation')
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
-  refreshTokenSchema
+  refreshTokenSchema,
+  deleteAccountSchema
 };

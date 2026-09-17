@@ -82,6 +82,20 @@ class AuthController {
       data: user
     });
   });
+
+  /**
+   * @route   POST /api/v1/auth/delete-account
+   * @desc    Delete user account and all associated data (GDPR compliance)
+   * @access  Private
+   */
+  deleteAccount = asyncHandler(async (req, res) => {
+    await authService.deleteAccount(req.user._id, req.validatedData.password);
+
+    res.status(200).json({
+      success: true,
+      message: 'Account and all personal data have been permanently deleted'
+    });
+  });
 }
 
 module.exports = new AuthController();

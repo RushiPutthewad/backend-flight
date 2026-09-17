@@ -6,7 +6,8 @@ const validate = require('../middlewares/validate');
 const {
   registerSchema,
   loginSchema,
-  refreshTokenSchema
+  refreshTokenSchema,
+  deleteAccountSchema
 } = require('../validators/auth.validator');
 
 /**
@@ -62,6 +63,18 @@ router.get(
   '/me',
   authenticate,
   authController.getCurrentUser
+);
+
+/**
+ * @route   POST /api/v1/auth/delete-account
+ * @desc    Delete user account and all associated data (GDPR compliance)
+ * @access  Private
+ */
+router.post(
+  '/delete-account',
+  authenticate,
+  validate(deleteAccountSchema),
+  authController.deleteAccount
 );
 
 module.exports = router;

@@ -68,13 +68,6 @@ Username: default
 Password: <your-redis-password>
 ```
 
-### Example:
-```
-Public endpoint: pen-grandfather-adjustment-93015.db.redis.io:11641
-Username: default
-Password: ZTmK1pi1BYwtSdXPzLMRqqEOX4aTjgHI
-```
-
 ---
 
 ## Step 4: Configure Your Application
@@ -86,11 +79,6 @@ Open your `.env` file and update the `REDIS_URL`:
 ```env
 # Redis Cloud Configuration
 REDIS_URL=redis://default:YOUR_PASSWORD@YOUR_HOST:YOUR_PORT
-```
-
-### Real Example:
-```env
-REDIS_URL=redis://default:ZTmK1pi1BYwtSdXPzLMRqqEOX4aTjgHI@pen-grandfather-adjustment-93015.db.redis.io:11641
 ```
 
 ### Format Breakdown:
@@ -316,12 +304,6 @@ Error: OOM command not allowed when used memory > 'maxmemory'
 ## Security Best Practices
 
 ### 1. **Never Commit Credentials**
-
-❌ **Wrong:**
-```env
-# .env (committed to git)
-REDIS_URL=redis://default:ZTmK1pi1BYwtSdXPzLMRqqEOX4aTjgHI@host:port
-```
 
 ✅ **Right:**
 ```bash
