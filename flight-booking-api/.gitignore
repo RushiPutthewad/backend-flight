@@ -7,3 +7,8 @@ coverage/
 diag-register.js
 diag-task.js
 test-register.js
+.agents
+.claude-flow
+.swarm
+skills-lock.json
+${userHome}
