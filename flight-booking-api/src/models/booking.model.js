@@ -96,7 +96,8 @@ bookingSchema.methods.transitionTo = function(newStatus) {
 // Indexes (from section 4)
 bookingSchema.index({ user: 1, createdAt: -1 });
 bookingSchema.index({ user: 1, status: 1 });
-bookingSchema.index({ bookingReference: 1 });
+// Note: bookingReference gets a unique index automatically from the field's
+// `unique: true` definition above — explicit index() call would cause a duplicate warning.
 bookingSchema.index({ 'flightDetails.departureTime': 1 });
 bookingSchema.index({ user: 1 });
 
